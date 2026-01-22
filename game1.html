@@ -1,0 +1,304 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Two Player Game</title>
+
+    <style>
+    * {
+        padding: 0;
+        margin: 0;
+        box-sizing: border-box;
+    }
+
+    body {
+        width: 100vw;
+        height: 100%;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        background-color: rgb(219, 237, 255);
+        font-family: Arial, sans-serif;
+    }
+
+    .container {
+        background-color: #0f2253;
+        border: 2px solid #93c5fd;
+        height: 71rem;
+        width: 75%;
+        box-shadow: 2px 2px 15px rgba(0, 0, 0, 0.5);
+        display: flex;
+        flex-direction: column;
+        justify-content: flex-start;
+        gap: 0.5rem;
+        border-radius: 12px;
+    }
+
+
+
+    .intcont{
+       
+        display: flex;
+        justify-content: center;
+        margin-bottom: 0.1rem;
+
+    }
+    .extcont{
+        display: flex;
+     
+        justify-content: center;
+        margin-top: 0.1rem;
+
+    }
+
+    .user1 {
+       
+        border: 1px solid #bfdbfe;
+        width: 20rem;
+        height: 36rem;
+        margin-left: 2rem;
+        margin-right: 2rem;
+        margin-top: 0.2rem;
+        
+        display: flex;
+        flex-direction: column;
+        border-radius: 10px;
+        background: linear-gradient(to bottom, #bef2ff, #5370ff);
+        box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.3);
+    }
+
+    .content {
+        height: 100%;
+        width: 100%;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+    }
+
+    h1 {
+        color: #04253a;
+        font-size: 1.8em;
+        margin-top: 1.2rem;
+        text-shadow: 1px 1px 3px rgba(0,0,0,0.5);
+    }
+
+    .display {
+        border: 2px solid #93c5fd;
+        width: 80%;
+        height: 30%;
+        color: #addeff;
+        font-size: 60px;
+        font-weight: bold;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        margin: 1rem 0;
+        background: rgb(10, 32, 68);
+        border-radius: 8px;
+    }
+
+    button {
+        height: 6%;
+        width: 20%;
+        margin-bottom: 1rem;
+        background-color: #1dd16b;
+        font-weight: bold;
+        border: none;
+        border-radius: 6px;
+       
+      
+    }
+
+    
+
+    .tdiv {
+        height: 60%;
+        width: 100%;
+        border: 2px solid #60a5fa;
+        border-radius: 8px;
+        overflow: hidden;
+    }
+
+    .tdiv table {
+        width: 100%;
+        height: 100%;
+        border-collapse: collapse;
+    }
+
+    .tdiv table th,
+    .tdiv table td {
+        background-color: rgba(72, 200, 162, 0.423);
+        border: 1px solid #072444;
+        text-align: center;
+        color: #061b2a;
+        font-weight: bold;
+    }
+
+    .res {
+        margin: 2em;
+        height: auto;
+        width: 20rem;
+        min-width: 0;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+    }
+
+
+    .displ {
+        border: 2px solid #93c5fd;
+        width: 17rem;
+        color: #05253a;
+        font-size: 60px;
+        font-weight: bold;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        height: 12rem;
+        margin: 1rem 0;
+        background: linear-gradient(to bottom, #bef2ff, #37e4ff76);
+
+     
+        border-radius: 8px;
+    }
+
+    .inres h1 {
+        text-align: center;
+        color: #e0f2fe;
+        text-shadow: 1px 1px 3px rgba(0,0,0,0.5);
+    }
+</style>
+
+
+</head>
+
+
+<body>
+
+    <div class="container">
+
+        <!-- RESULT DISPLAY -->
+        <div class="intcont">
+            <div class="res">
+                <div class="inres">
+                    <h1>Result</h1>
+                    <div class="displ" id="mainoutput">0</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- PLAYERS WILL BE CREATED HERE -->
+        <div class="extcont" id="playersContainer"></div>
+
+    </div>
+
+    <script>
+    const params = new URLSearchParams(window.location.search);
+    const totalPlayers = parseInt(params.get("players")) || 2;
+
+    let sums = Array(totalPlayers).fill(0);
+    let turns = Array(totalPlayers).fill(0);
+    let buttons = [];
+    let gameover = false;
+    let currentTurn = -1;   // no fixed starter
+    let timer;
+    let gameStarted = false;
+
+    const playersContainer = document.getElementById("playersContainer");
+
+    for (let i = 0; i < totalPlayers; i++) {
+        const playerDiv = document.createElement("div");
+        playerDiv.className = "user1";
+
+        playerDiv.innerHTML = `
+            <div class="content">
+                <h1>Player ${i + 1}</h1>
+                <div class="display" id="user${i}">0</div>
+                <button id="btn${i}" onclick="spin(${i})">Spin</button>
+                <div class="tdiv">
+                    <table id="table${i}">
+                        <tr>
+                            <th>Turn</th>
+                            <th>Result</th>
+                            <th>Sum</th>
+                        </tr>
+                    </table>
+                </div>
+            </div>
+        `;
+
+        playersContainer.appendChild(playerDiv);
+        buttons.push(playerDiv.querySelector("button"));
+    }
+
+    function spin(player)
+     {
+        if (gameover) return;
+
+        if (!gameStarted) {
+            gameStarted = true;
+            currentTurn = player;
+            buttons.forEach((btn, i) => btn.disabled = i !== player);
+        }
+
+        if (player !== currentTurn) return;
+
+        resetTimer();
+
+        const roll = Math.floor(Math.random() * 6) + 1;
+        document.getElementById("mainoutput").innerHTML = roll;
+
+        turns[player]++;
+
+        if (sums[player] + roll <= 10) {
+            sums[player] += roll;
+            document.getElementById(`user${player}`).innerHTML = sums[player];
+        }
+
+        addRow(`table${player}`, turns[player], roll, sums[player]);
+
+        if (sums[player] === 10) {
+            win(player);
+            return;
+        }
+
+        nextTurn();
+    }
+
+    function addRow(tableId, turn, result, sum) {
+        const table = document.getElementById(tableId);
+        const row = table.insertRow();
+        row.insertCell(0).innerHTML = turn;
+        row.insertCell(1).innerHTML = result;
+        row.insertCell(2).innerHTML = sum;
+    }
+
+    function nextTurn() {
+        buttons[currentTurn].disabled = true;
+        currentTurn = (currentTurn + 1) % totalPlayers;
+        buttons[currentTurn].disabled = false;
+        resetTimer();
+    }
+
+    function win(player) {
+        gameover = true;
+        document.getElementById("mainoutput").innerHTML = `Player ${player + 1} Won`;
+        buttons.forEach(btn => btn.disabled = true);
+        clearTimeout(timer);
+    }
+
+    function resetTimer() {
+        clearTimeout(timer);
+        if (gameover) return;
+
+        timer = setTimeout(() => {
+            nextTurn();
+        }, 5000);
+    }
+</script>
+
+
+</body>
+</html>
